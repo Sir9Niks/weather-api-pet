@@ -1,0 +1,319 @@
+openapi: "3.0.3"
+info:
+  title: "OpenWeatherMap API (для тестов PET-проекта)"
+  description: |
+    Документация API, используемого в PET-проекте по автоматизации тестирования (PyTest).
+    Эндпоинты: Current Weather (/weather) и 5-day Forecast (/forecast).
+    Базовый URL: https://api.openweathermap.org/data/2.5/
+    API key (appid) обязателен — получить бесплатно на https://openweathermap.org/api
+  version: "1.0.0"
+  termsOfService: "https://openweathermap.org/terms"
+  contact:
+    name: "OpenWeather"
+    url: "https://openweathermap.org"
+  license:
+    name: "CC BY-SA 4.0"
+    url: "https://creativecommons.org/licenses/by-sa/4.0/"
+servers:
+  - url: "https://api.openweathermap.org/data/2.5"
+    description: "Production server"
+tags:
+  - name: "Current Weather"
+    description: "Текущая погода"
+  - name: "Forecast"
+    description: "5-дневный прогноз (3-часовые интервалы)"
+paths:
+  /weather:
+    get:
+      tags:
+        - "Current Weather"
+      summary: "Получить текущую погоду по городу/координатам"
+      description: "Возвращает данные о текущей погоде (температура, ветер, осадки и т.д.)"
+      operationId: "getCurrentWeather"
+      parameters:
+        - name: "q"
+          in: "query"
+          description: "Город (например, Amsterdam) или city,country (Amsterdam,NL). Альтернатива: lat,lon"
+          required: false
+          schema:
+            type: "string"
+        - name: "lat"
+          in: "query"
+          description: "Широта"
+          required: false
+          schema:
+            type: "number"
+        - name: "lon"
+          in: "query"
+          description: "Долгота"
+          required: false
+          schema:
+            type: "number"
+        - name: "appid"
+          in: "query"
+          description: "Ваш API ключ (обязателен!)"
+          required: true
+          schema:
+            type: "string"
+        - name: "units"
+          in: "query"
+          description: "Единицы измерения (metric, imperial, standard)"
+          required: false
+          schema:
+            type: "string"
+            enum: ["metric", "imperial", "standard"]
+            default: "standard"
+        - name: "lang"
+          in: "query"
+          description: "Язык (en, ru, de и т.д.)"
+          required: false
+          schema:
+            type: "string"
+            default: "en"
+      responses:
+        "200":
+          description: "Успешный ответ"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentWeather"
+        "404":
+          description: "Город не найден"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  cod:
+                    type: "string"
+                    example: "404"
+                  message:
+                    type: "string"
+                    example: "city not found"
+        "401":
+          description: "Неверный API key"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  cod:
+                    type: "integer"
+                    example: 401
+                  message:
+                    type: "string"
+                    example: "Invalid API key"
+  /forecast:
+    get:
+      tags:
+        - "Forecast"
+      summary: "5-дневный прогноз (3-часовые интервалы)"
+      description: "Возвращает прогноз на 5 дней (обычно 40 записей)"
+      operationId: "get5DayForecast"
+      parameters:
+        - name: "q"
+          in: "query"
+          description: "Город (например, Amsterdam)"
+          required: false
+          schema:
+            type: "string"
+        - name: "lat"
+          in: "query"
+          description: "Широта"
+          required: false
+          schema:
+            type: "number"
+        - name: "lon"
+          in: "query"
+          description: "Долгота"
+          required: false
+          schema:
+            type: "number"
+        - name: "appid"
+          in: "query"
+          description: "API ключ (обязателен)"
+          required: true
+          schema:
+            type: "string"
+        - name: "units"
+          in: "query"
+          description: "metric/imperial/standard"
+          required: false
+          schema:
+            type: "string"
+            default: "standard"
+        - name: "lang"
+          in: "query"
+          description: "Язык"
+          required: false
+          schema:
+            type: "string"
+            default: "en"
+        - name: "cnt"
+          in: "query"
+          description: "Количество записей (по умолчанию 40)"
+          required: false
+          schema:
+            type: "integer"
+      responses:
+        "200":
+          description: "Успешный прогноз"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Forecast5Day"
+        "404":
+          description: "Город не найден"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  cod: { type: "string", example: "404" }
+                  message: { type: "string", example: "city not found" }
+        "401":
+          description: "Неверный API key"
+components:
+  securitySchemes:
+    apiKey:
+      type: "apiKey"
+      name: "appid"
+      in: "query"
+  schemas:
+    CurrentWeather:
+      type: "object"
+      required: ["coord", "weather", "main", "dt", "sys", "name", "cod"]
+      properties:
+        coord:
+          type: "object"
+          properties:
+            lon: { type: "number" }
+            lat: { type: "number" }
+        weather:
+          type: "array"
+          items:
+            type: "object"
+            properties:
+              id: { type: "integer" }
+              main: { type: "string" }
+              description: { type: "string" }
+              icon: { type: "string" }
+        base: { type: "string", example: "stations" }
+        main:
+          type: "object"
+          properties:
+            temp: { type: "number" }
+            feels_like: { type: "number" }
+            temp_min: { type: "number" }
+            temp_max: { type: "number" }
+            pressure: { type: "integer" }
+            humidity: { type: "integer" }
+            sea_level: { type: "integer" }
+            grnd_level: { type: "integer" }
+        visibility: { type: "integer" }
+        wind:
+          type: "object"
+          properties:
+            speed: { type: "number" }
+            deg: { type: "integer" }
+            gust: { type: "number" }
+        clouds:
+          type: "object"
+          properties:
+            all: { type: "integer" }
+        rain:
+          type: "object"
+          properties:
+            1h: { type: "number" }
+            3h: { type: "number" }
+        snow:
+          type: "object"
+          properties:
+            3h: { type: "number" }
+        dt: { type: "integer" }
+        sys:
+          type: "object"
+          properties:
+            type: { type: "integer" }
+            id: { type: "integer" }
+            country: { type: "string" }
+            sunrise: { type: "integer" }
+            sunset: { type: "integer" }
+        timezone: { type: "integer" }
+        id: { type: "integer" }
+        name: { type: "string" }
+        cod: { type: "integer", example: 200 }
+    Forecast5Day:
+      type: "object"
+      required: ["cod", "list", "city"]
+      properties:
+        cod: { type: "string", example: "200" }
+        message: { type: "number" }
+        cnt: { type: "integer", example: 40 }
+        list:
+          type: "array"
+          items:
+            type: "object"
+            properties:
+              dt: { type: "integer" }
+              main:
+                type: "object"
+                properties:
+                  temp: { type: "number" }
+                  feels_like: { type: "number" }
+                  temp_min: { type: "number" }
+                  temp_max: { type: "number" }
+                  pressure: { type: "integer" }
+                  sea_level: { type: "integer" }
+                  grnd_level: { type: "integer" }
+                  humidity: { type: "integer" }
+                  temp_kf: { type: "number" }
+              weather:
+                type: "array"
+                items:
+                  type: "object"
+                  properties:
+                    id: { type: "integer" }
+                    main: { type: "string" }
+                    description: { type: "string" }
+                    icon: { type: "string" }
+              clouds:
+                type: "object"
+                properties:
+                  all: { type: "integer" }
+              wind:
+                type: "object"
+                properties:
+                  speed: { type: "number" }
+                  deg: { type: "integer" }
+                  gust: { type: "number" }
+              visibility: { type: "integer" }
+              pop: { type: "number" }
+              rain:
+                type: "object"
+                properties:
+                  3h: { type: "number" }
+              snow:
+                type: "object"
+                properties:
+                  3h: { type: "number" }
+              sys:
+                type: "object"
+                properties:
+                  pod: { type: "string", enum: ["d", "n"] }
+              dt_txt: { type: "string", example: "2025-01-26 12:00:00" }
+        city:
+          type: "object"
+          properties:
+            id: { type: "integer" }
+            name: { type: "string" }
+            coord:
+              type: "object"
+              properties:
+                lat: { type: "number" }
+                lon: { type: "number" }
+            country: { type: "string" }
+            population: { type: "integer" }
+            timezone: { type: "integer" }
+            sunrise: { type: "integer" }
+            sunset: { type: "integer" }
