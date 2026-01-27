@@ -62,7 +62,7 @@ weather_api_pet/
 ### 1. Клонирование и установка
 
 ```bash
-git clone https://github.com/yourusername/weather-api-pet.git
+git clone https://github.com/Sir9Niks/weather-api-pet.git
 cd weather-api-pet
 ```
 
