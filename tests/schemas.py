@@ -1,6 +1,3 @@
-# tests/schemas.py
-# Схемы основаны на официальных примерах OpenWeatherMap (2024–2025)
-
 CURRENT_WEATHER_SCHEMA = {
     "type": "object",
     "required": ["coord", "weather", "base", "main", "visibility", "wind", "clouds", "dt", "sys", "timezone", "id", "name", "cod"],
